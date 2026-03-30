@@ -3,3 +3,5 @@
 #rest apis
 flask
 flask_cors
+uvicorn
+gunicorn
