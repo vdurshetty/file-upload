@@ -1,0 +1,80 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat Window</title>
+</head>
+<body >
+    <table row="2"  border="1">
+        <tr>
+            <td>Select Folder Name</td>
+            <td>  <select id="categorySelect" onchange="loadFiles()">
+                <option value="">-- Select --</option>
+                <option value="docs">PDF Files</option>
+                <option value="images">Image Files</option>
+                <option value="voice">Voice Recordings</option>
+              </select>
+            </td>
+        </tr>
+        <tr>
+            <td>Select File Name</td>
+            <td>
+                  <select id="fileSelect" >
+                  </select>
+            </td>
+        </tr>
+        <tr>
+            <td><button id="up" name="upload" >upload</button></td>
+            <td><button id="del" name="delete" onclick="deleteFiles()">delete</button>
+            </td>
+        </tr>
+    </table>
+     <div id="status">hello</div>
+    </body>
+    <script>
+        async function  loadFiles() {
+            const selected = document.getElementById("categorySelect").value;
+            const select = document.getElementById("fileSelect");
+            select.options.length = 0;
+              try {
+                const response = await fetch("/files?type=" + selected, {
+                    method: "GET"
+                });
+
+                const result = await response.json();
+                console.log( result);
+                for (let key in result) {
+                  console.log(key, result[key]);
+                  const option = document.createElement("option");
+                  option.value = key;
+                  option.text = result[key];
+                  select.appendChild(option);
+              }
+            } catch (error) {
+                document.getElementById('status').innerText = "Error uploading file!";
+                console.error(error);
+            }
+        }
+
+        async function  deleteFiles() {
+            const selectedType = document.getElementById("categorySelect").value;
+            const select = document.getElementById("fileSelect");
+
+            console.log(select.options[select.selectedIndex].text);
+              try {
+                const response = await fetch("/deletefile?type=" + selectedType + "&file=" + select.options[select.selectedIndex].text, {
+                    method: "DELETE"
+                });
+
+                const result = await response.json();
+                console.log( result);
+                document.getElementById("status").value = result;
+                loadFiles();
+              } catch (error) {
+                document.getElementById('status').innerText = "Error uploading file!";
+                console.error(error);
+            }
+        }
+
+    </script>
+</html>

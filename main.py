@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 # from flask_cors import CORS
 import os
+import json
 
 VOICE_FOLDER = "uploads/voice"
 IMAGE_FOLDER = "uploads/images"
@@ -63,10 +64,48 @@ def my_upload():
     return render_template("upload.html")
 
 
+@app.route("/list")
+def my_files():
+    print("current path:", request.full_path)
+    return render_template("files.html")
+
+
 @app.route("/record")
 def my_record():
     print("current path:", request.full_path)
     return render_template("myrecord.html")
+
+
+@app.route("/files")
+def get_files():
+    response = jsonify({"error": "valid query types are ?type=[docs/images/voice]"})
+    upload_folder = os.getcwd() + "/uploads"
+    fpath = request.args.get('type')
+    if fpath is None:
+        fpath = "docs"
+    else:
+        fpath = request.args.get('type')
+    folder_path = upload_folder + "/" + fpath
+    if os.path.exists(folder_path) and os.path.isdir(folder_path):
+        pdf_files = [f for f in os.listdir(folder_path) if f.endswith(".pdf")]
+        response = json.dumps({i: v for i, v in enumerate(pdf_files)})
+    return response
+
+
+@app.route("/deletefile", methods=["DELETE"])
+def delete_file():
+    response = jsonify({"error": "select file name"})
+    upload_folder = os.getcwd() + "/uploads"
+    fpath = request.args.get('type')
+    filename = request.args.get('file')
+    print("File name ", filename)
+    if filename is not None:
+        file_path = upload_folder + "/" + fpath + "/" + filename
+        print(file_path)
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+            response = jsonify({"message": "File deleted successfully", "filename": filename}), 200
+    return response
 
 
 @app.route("/aichat", methods=["POST"])
