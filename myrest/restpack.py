@@ -127,5 +127,5 @@ class RestPack:
         self.app.run(host="0.0.0.0", port=7890, debug=True)
 
 
-# if __name__ == "__main__":
-#     RestPack().run()
+if __name__ == "__main__":
+     RestPack().run()
