@@ -24,9 +24,10 @@ class RestPack:
     DOCS_ALLOWED_EXTENSIONS = {"pdf", "xls"}
 
 
-
     """A simple RESTful API pack using Flask."""
     def __init__(self):
+        # os.chdir("..")
+        print("Folder Path is :", os.getcwd())
         self.app = Flask(__name__, template_folder=os.getcwd()+"/templates")
         # CORS(self.app, resources={
         #     r"/*": {
@@ -128,4 +129,4 @@ class RestPack:
 
 
 if __name__ == "__main__":
-     RestPack().run()
+    RestPack().run()
