@@ -146,7 +146,7 @@
       status.textContent = 'Uploading...';
       uploadBtn.disabled = true;
       try {
-        const res = await fetch('http://127.0.0.1:7890/upload_voice', {
+        const res = await fetch( "/upload_voice", {
           method: 'POST',
           body: fd,
           // If you need auth, add headers; do NOT set content-type: browser will set multipart boundary

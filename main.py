@@ -30,6 +30,7 @@ def allowed_file(filename, file_type):
     elif file_type == UPLOAD_TYPE[2]:
         return "." in filename and filename.rsplit(".", 1)[1].lower() in DOCS_ALLOWED_EXTENSIONS
 
+
 def check_upload_file(request_file):
     if "file" not in request_file:
         return jsonify({"error": "No file part in request"}), 400

@@ -30,7 +30,7 @@ async function uploadFile() {
     document.getElementById('status').innerText = "Uploading...";
 
     try {
-        const response = await fetch("https://" + hostname  + "/upload_docs", {
+        const response = await fetch("/upload_docs", {
             method: "POST",
             body: formData
         });
