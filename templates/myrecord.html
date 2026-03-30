@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Record & Upload Audio</title>
+  <style>
+    body { font-family: system-ui, Arial; margin: 24px; }
+    button { margin-right: 8px; padding: 8px 12px; }
+    #meter { width: 100%; height: 8px; background: #eee; margin-top: 8px; border-radius: 4px; overflow: hidden; }
+    #meter > i { display: block; height: 100%; width: 0%; background: #4caf50; transition: width .1s linear; }
+    #status { margin-top: 12px; color: #333; }
+  </style>
+</head>
+<body>
+  <h1>🎤 Record audio & upload</h1>
+
+  <div>
+    <button id="startBtn">Start</button>
+    <button id="stopBtn" disabled>Stop</button>
+    <button id="uploadBtn" disabled>Upload</button>
+  </div>
+
+  <div id="meter"><i></i></div>
+  <div id="status">Idle</div>
+  <audio id="playback" controls style="display:block; margin-top:12px;"></audio>
+
+  <script>
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn  = document.getElementById('stopBtn');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const status = document.getElementById('status');
+    const playback = document.getElementById('playback');
+    const meterBar = document.querySelector('#meter > i');
+
+    let mediaRecorder;
+    let audioChunks = [];
+    let recordedBlob = null;
+    let audioStream = null;
+    let analyser, audioCtx, sourceNode, dataArray;
+
+    async function startRecording() {
+      try {
+        audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (err) {
+        status.textContent = 'Microphone access denied or unavailable.';
+        console.error(err);
+        return;
+      }
+
+      // Optional: create simple volume meter using WebAudio API
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      sourceNode = audioCtx.createMediaStreamSource(audioStream);
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 256;
+      dataArray = new Uint8Array(analyser.frequencyBinCount);
+      sourceNode.connect(analyser);
+      visualizeMeter();
+
+      // Choose mimeType that browser supports
+      let mimeType = '';
+      if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+        mimeType = 'audio/webm;codecs=opus';
+      } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+        mimeType = 'audio/webm';
+      } else if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) {
+        mimeType = 'audio/ogg;codecs=opus';
+      } // Chrome/Firefox typically support webm/ogg
+
+      try {
+        mediaRecorder = new MediaRecorder(audioStream, mimeType ? { mimeType } : undefined);
+
+      } catch (err) {
+        // fallback: no mimeType or browser doesn't support MediaRecorder
+        console.error('MediaRecorder init error', err);
+        status.textContent = 'Recording not supported in this browser.';
+        return;
+      }
+
+      audioChunks = [];
+      mediaRecorder.ondataavailable = e => { if (e.data && e.data.size) audioChunks.push(e.data); };
+      mediaRecorder.onstart = () => { status.textContent = 'Recording...'; startBtn.disabled = true; stopBtn.disabled = false; uploadBtn.disabled = true; };
+      mediaRecorder.onstop = () => {
+        recordedBlob = new Blob(audioChunks, { type: audioChunks[0]?.type || 'audio/webm' });
+        playback.src = URL.createObjectURL(recordedBlob);
+        playback.style.display = 'block';
+        status.textContent = 'Recording stopped. Ready to upload.';
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        uploadBtn.disabled = false;
+        stopMeter();
+      };
+
+      mediaRecorder.start();
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+      }
+      if (audioStream) {
+        audioStream.getTracks().forEach(t => t.stop());
+      }
+      if (audioCtx && audioCtx.state !== 'closed') {
+        audioCtx.close().catch(() => {});
+      }
+    }
+
+    function visualizeMeter() {
+      function draw() {
+        if (!analyser) return;
+        analyser.getByteFrequencyData(dataArray);
+        // compute roughly the average volume
+        let sum = 0;
+        for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+        const avg = sum / dataArray.length; // 0..255
+        const percent = Math.min(100, Math.round((avg / 255) * 100));
+        meterBar.style.width = percent + '%';
+        requestAnimationFrame(draw);
+      }
+      draw();
+    }
+
+    function stopMeter() {
+      meterBar.style.width = '0%';
+      analyser = null;
+      dataArray = null;
+    }
+
+    async function uploadRecording() {
+      if (!recordedBlob) {
+        status.textContent = 'No recording available to upload.';
+        return;
+      }
+
+      const fd = new FormData();
+      // name it with a timestamp + extension that matches blob.type if possible
+      console.log("Record type " + recordedBlob.type);
+      const ext = recordedBlob.type.includes('ogg') ? 'ogg' : (recordedBlob.type.includes('wav') ? 'wav' : 'webm');
+      console.log("Record Extension is " + ext);
+      const filename = `recording-${Date.now()}.${ext}`;
+      fd.append('file', recordedBlob, filename);
+      // optional: add metadata
+      fd.append('meta', JSON.stringify({ source: 'web-recording', filename }));
+
+      status.textContent = 'Uploading...';
+      uploadBtn.disabled = true;
+      try {
+        const res = await fetch('http://127.0.0.1:7890/upload_voice', {
+          method: 'POST',
+          body: fd,
+          // If you need auth, add headers; do NOT set content-type: browser will set multipart boundary
+          // headers: { "Authorization": "Bearer YOUR_TOKEN" }
+        });
+
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`Upload failed: ${res.status} ${text}`);
+        }
+
+        const data = await res.json();
+        status.textContent = 'Upload successful: ' + (data?.id ?? 'OK');
+      } catch (err) {
+        console.error(err);
+        status.textContent = 'Upload error: ' + err.message;
+      } finally {
+        uploadBtn.disabled = false;
+      }
+    }
+
+    // Wire UI
+    startBtn.addEventListener('click', startRecording);
+    stopBtn.addEventListener('click', stopRecording);
+    uploadBtn.addEventListener('click', uploadRecording);
+  </script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MP3 Voice Recorder</title>
+    <style>
+        body { font-family: Arial; padding: 24px; }
+        button { margin-right: 10px; padding: 10px 20px; }
+    </style>
+</head>
+<body>
+
+<h2>Record Audio (MP3)</h2>
+
+<button id="startBtn">Start Recording</button>
+<button id="stopBtn" disabled>Stop Recording</button>
+
+<h3>Preview / Download</h3>
+<audio id="audioPlayback" controls></audio>
+<br><br>
+<a id="downloadLink"></a>
+
+<script>
+let mediaRecorder;
+let audioChunks = [];
+
+document.getElementById("startBtn").onclick = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+    // Check browser MP3 support
+    const options = { mimeType: "audio/mpeg" };
+
+<!--    if (!MediaRecorder.isTypeSupported(options.mimeType)) {-->
+<!--        alert("MP3 is not supported by this browser. Try Chrome.");-->
+<!--        return;-->
+<!--    }-->
+
+    mediaRecorder = new MediaRecorder(stream, options);
+
+    audioChunks = [];
+    mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+
+    mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunks, { type: "audio/mpeg" });
+
+        // Create preview
+        const audioUrl = URL.createObjectURL(audioBlob);
+        document.getElementById("audioPlayback").src = audioUrl;
+
+        // Create download link
+        const download = document.getElementById("downloadLink");
+        download.href = audioUrl;
+        download.download = "recording.mp3";
+        download.textContent = "Download MP3 File";
+    };
+
+    mediaRecorder.start();
+    console.log("Recording started...");
+
+    document.getElementById("startBtn").disabled = true;
+    document.getElementById("stopBtn").disabled = false;
+};
+
+document.getElementById("stopBtn").onclick = () => {
+    mediaRecorder.stop();
+    console.log("Recording stopped.");
+
+    document.getElementById("startBtn").disabled = false;
+    document.getElementById("stopBtn").disabled = true;
+};
+</script>
+
+</body>
+</html>

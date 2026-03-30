@@ -1,0 +1,35 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat Window</title>
+</head>
+<body >
+    <table row="2" >
+        <tr>
+            <td>AI Response</td>
+            <td><div id="chatbox" style="height:300px;width:400px;border:1px solid black;overflow:auto;"></div></td>
+        </tr>
+        <tr>
+            <td>Enter Query</td>
+            <td><input style="width:340px" type="text" id="msg" /><button onclick="sendMessage()">Send</button></td>
+        </tr>
+    </table>
+    <script>
+        async function sendMessage() {
+            let msg = document.getElementById('msg').value;
+            const response = await fetch("/aichat", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({message: msg})
+            });
+            const data = await response.json();
+            const chatbox = document.getElementById('chatbox');
+            chatbox.innerHTML += "You: " + msg + "<br>";
+            chatbox.innerHTML += "Bot: " + data.response + "<br>";
+            document.getElementById('msg').value = "";
+            chatbox.scrollTop = chatbox.scrollHeight;
+        }
+    </script>
+</body>
+</html>

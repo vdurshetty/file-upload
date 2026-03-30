@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload File using REST API</title>
+</head>
+<body>
+
+<h2>Upload File using REST API</h2>
+
+<input type="file" id="fileInput">
+<br><br>
+
+<button onclick="uploadFile()">Upload</button>
+
+<p id="status"></p>
+
+<script>
+async function uploadFile() {
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput.files.length === 0) {
+        document.getElementById('status').innerText = "Please select a file!";
+        return;
+    }
+
+    const file = fileInput.files[0];
+    const formData = new FormData();
+    formData.append("file", file);
+
+    document.getElementById('status').innerText = "Uploading...";
+
+    try {
+        const response = await fetch("http://127.0.0.1:7890/upload_docs", {
+            method: "POST",
+            body: formData
+        });
+
+        const result = await response.text();
+        document.getElementById('status').innerText = result;
+
+    } catch (error) {
+        document.getElementById('status').innerText = "Error uploading file!";
+        console.error(error);
+    }
+}
+</script>
+
+</body>
+</html>
