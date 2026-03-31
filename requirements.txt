@@ -1,7 +1,11 @@
-#pip install -r requirements.txt
 
 #rest apis
 flask
 flask_cors
 uvicorn
 gunicorn
+# open ai
+scikit-learn
+openai
+pdfplumber
+python-dotenv

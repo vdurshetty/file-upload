@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, render_template
 # from flask_cors import CORS
 import os
 import json
+from myrag.vectorless_rag import rag_response
 
 VOICE_FOLDER = "uploads/voice"
 IMAGE_FOLDER = "uploads/images"
@@ -111,8 +112,11 @@ def delete_file():
 @app.route("/aichat", methods=["POST"])
 def chat():
     user_msg = request.json.get("message")
-    # bot_msg = llm_with_my_tools.ai_invoke(user_msg)
-    return jsonify({"response": user_msg})
+    pdf_file = request.headers.get("filename")
+    print("query message :", user_msg)
+    print("file name :", pdf_file)
+    bot_msg = rag_response(pdf_file, user_msg)
+    return jsonify({"response": bot_msg})
 
 
 @app.route("/upload_image", methods=["POST"])

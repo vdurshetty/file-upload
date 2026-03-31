@@ -4,8 +4,16 @@
 <head>
     <title>Chat Window</title>
 </head>
-<body >
+<body onload="loadFiles()">
+    <h2> Vectorless RAG Example from the given PDF file</h2>
     <table row="2" >
+        <tr>
+            <td>Select PDF File Name</td>
+            <td>
+                  <select id="fileSelect" >
+                  </select>
+            </td>
+        </tr>
         <tr>
             <td>AI Response</td>
             <td><div id="chatbox" style="height:300px;width:400px;border:1px solid black;overflow:auto;"></div></td>
@@ -18,9 +26,11 @@
     <script>
         async function sendMessage() {
             let msg = document.getElementById('msg').value;
+            const select = document.getElementById("fileSelect");
+
             const response = await fetch("/aichat", {
                 method: "POST",
-                headers: {"Content-Type": "application/json"},
+                headers: {"Content-Type": "application/json", "filename": select.options[select.selectedIndex].text },
                 body: JSON.stringify({message: msg})
             });
             const data = await response.json();
@@ -29,6 +39,30 @@
             chatbox.innerHTML += "Bot: " + data.response + "<br>";
             document.getElementById('msg').value = "";
             chatbox.scrollTop = chatbox.scrollHeight;
+        }
+
+        async function  loadFiles() {
+            console.log("on body load.....");
+            const select = document.getElementById("fileSelect");
+            select.options.length = 0;
+              try {
+                const response = await fetch("/files?type=docs" , {
+                    method: "GET"
+                });
+
+                const result = await response.json();
+                console.log( result);
+                for (let key in result) {
+                  console.log(key, result[key]);
+                  const option = document.createElement("option");
+                  option.value = key;
+                  option.text = result[key];
+                  select.appendChild(option);
+              }
+            } catch (error) {
+                document.getElementById('status').innerText = "Error uploading file!";
+                console.error(error);
+            }
         }
     </script>
 </body>
