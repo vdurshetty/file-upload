@@ -1,4 +1,3 @@
-
 #rest apis
 flask
 flask_cors
@@ -9,3 +8,5 @@ scikit-learn
 openai
 pdfplumber
 python-dotenv
+PyMuPDF
+anthropic
