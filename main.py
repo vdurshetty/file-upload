@@ -1,8 +1,9 @@
 from flask import Flask, request, jsonify, render_template
-# from flask_cors import CORS
+from flask_cors import CORS
 import os
 import json
 from myrag.vectorless_rag import rag_response
+from myrag.vless_rag_pindex import fetch_query
 
 VOICE_FOLDER = "uploads/voice"
 IMAGE_FOLDER = "uploads/images"
@@ -45,6 +46,7 @@ def check_upload_file(request_file):
 # os.chdir("..")
 print("Folder Path is :", os.getcwd())
 app = Flask(__name__, template_folder=os.getcwd() + "/templates")
+CORS(app)
 
 
 @app.route("/")
@@ -116,6 +118,21 @@ def chat():
     print("query message :", user_msg)
     print("file name :", pdf_file)
     bot_msg = rag_response(pdf_file, user_msg)
+    return jsonify({"response": bot_msg})
+
+
+@app.route("/ragchat", methods=["POST"])
+def rag_chat():
+    user_msg = request.json.get("message")
+    print("query message :", user_msg)
+    # req_obj = request.get_json()
+    # result = []
+    # # Loop through each key-value pair
+    # for key, value in req_obj.items():
+    #     print(f"{key} = {value}")
+    #     result.append(value)
+
+    bot_msg = fetch_query("/Users/venu/venus/ai_samples/file-upload/uploads/docs", user_msg)
     return jsonify({"response": bot_msg})
 
 

@@ -180,6 +180,8 @@ class PageIndexedRAG:
         """
         # Build user message with all page blocks + question
         user_content = build_message_content(self.index, question)
+        print("Content count", user_content)
+
         self.history.append({"role": "user", "content": user_content})
 
         if verbose:

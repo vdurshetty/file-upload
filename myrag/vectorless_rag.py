@@ -118,7 +118,7 @@ def generate_answer(query, results):
 
 
 def rag_response(pdf_file: str, query: str):
-    print("inside rag_response :", pdf_file  + " : " + query)
+    print("inside rag_response :", pdf_file + " : " + query)
     # Step 1: Load PDFs
     docs = load_pdf("/uploads/docs/" + pdf_file)
     print("pdf file is :", docs)

@@ -28,7 +28,7 @@
             let msg = document.getElementById('msg').value;
             const select = document.getElementById("fileSelect");
 
-            const response = await fetch("/aichat", {
+            const response = await fetch("/ragchat", {
                 method: "POST",
                 headers: {"Content-Type": "application/json", "filename": select.options[select.selectedIndex].text },
                 body: JSON.stringify({message: msg})
