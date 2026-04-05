@@ -11,3 +11,8 @@ python-dotenv
 PyMuPDF
 anthropic
 pageindex
+langchain-openai
+langchain-community
+
+#postgres db
+psycopg2-binary
