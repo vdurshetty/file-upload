@@ -9,7 +9,7 @@ openai
 pdfplumber
 python-dotenv
 PyMuPDF
-anthropic
+#anthropic
 pageindex
 langchain-openai
 langchain-community

@@ -3,27 +3,35 @@ import os
 from dotenv import load_dotenv  # only needed locally
 
 load_dotenv()
-
-pgvecotr_key = os.environ.get("pg_password")
+pgvector_key = os.environ.get("pg_password")
 
 
 # Connect to your database
 conn = psycopg2.connect(
     dbname="postgres",
     user="postgres",
-    password=pgvecotr_key,
+    password=pgvector_key,
     host="db.hjutiuttzsdrzoyzuzmx.supabase.co",
     port=5432
 )
 cursor = conn.cursor()
 
 
-def pg_create_table(script):
+def pg_create_table_index(script):
     # Create a table with a vector column
     with cursor as cur:
         cur.execute(script)
         conn.commit()
-    print("Table successfully created...")
+    if "table" in script.lower():
+        print("Table successfully created...")
+    elif "index" in script.lower():
+        print("Index successfully created...")
+
+
+def pg_drop_table_index(table_name, object_type="TABLE"):
+    sql = "DROP ".join(object_type).join(" IF EXISTS ").join(table_name).join(";")
+    cursor.execute(sql)
+    conn.commit()
 
 
 def pg_insert(sql, text, embedding):
@@ -45,19 +53,6 @@ def pg_execute_many(sql, data):
 def pg_sql_execute(sql):
     cursor.execute(sql)
     return cursor.fetchall()
-
-
-def pg_create_table_index(sql):
-    cursor.execute(sql)
-    conn.commit()
-    print("Table or index created")
-
-
-def pg_drop_table_index(table_name, object_type="TABLE"):
-    sql = "DROP ".join(object_type).join(" IF EXISTS ").join(table_name).join(";")
-    cursor.execute(sql)
-    conn.commit()
-
 
 # create vector extension in postgresql database
 # pg_create_table("CREATE EXTENSION vector;")

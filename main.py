@@ -3,7 +3,6 @@ from flask_cors import CORS
 import os
 import json
 from myrag.vectorless_rag import rag_response
-from myrag.vless_rag_pindex import fetch_query
 
 VOICE_FOLDER = "uploads/voice"
 IMAGE_FOLDER = "uploads/images"
@@ -132,7 +131,7 @@ def rag_chat():
     #     print(f"{key} = {value}")
     #     result.append(value)
 
-    bot_msg = fetch_query("/Users/venu/venus/ai_samples/file-upload/uploads/docs", user_msg)
+    bot_msg = "test" # fetch_query("/Users/venu/venus/ai_samples/file-upload/uploads/docs", user_msg)
     return jsonify({"response": bot_msg})
 
 
